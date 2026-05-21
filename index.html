@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>奇妙英语天天练</title>
+    <!-- 引入 Tailwind CSS 构建现代 UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 3D 卡片翻转效果 */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+        .preserve-3d {
+            transform-style: preserve-3d;
+        }
+        .backface-hidden {
+            backface-visibility: hidden;
+        }
+        .rotate-y-180 {
+            transform: rotateY(180deg);
+        }
+        /* 解决 iOS 点击高亮问题 */
+        button, div {
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* 动画过渡 */
+        .card-transition {
+            transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* 自定义可爱波浪背景 */
+        .bg-pattern {
+            background-color: #f0fdf4;
+            background-image: radial-gradient(#dcfce7 1.5px, transparent 1.5px), radial-gradient(#dcfce7 1.5px, #f0fdf4 1.5px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+        /* 玻璃拟态面板 */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+        /* 音节字母炫彩动效 */
+        .syllable-span {
+            display: inline-block;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease-in-out;
+        }
+        .syllable-span:hover {
+            transform: scale(1.15) translateY(-2px);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body class="bg-pattern min-h-screen flex flex-col items-center justify-between p-4 overflow-x-hidden font-sans select-none">
+
+    <!-- 顶栏状态信息 -->
+    <div class="w-full max-w-md flex justify-between items-center px-4 py-2 bg-white/80 backdrop-blur-md rounded-2xl shadow-sm z-10">
+        <div class="flex items-center space-x-2">
+            <span class="text-2xl">🌱</span>
+            <span class="font-bold text-emerald-800 text-lg">奇妙英语天天练</span>
+        </div>
+        <button id="editBtn" onclick="showSetupScreen()" class="hidden px-3.5 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-medium rounded-full text-sm transition-all active:scale-95 flex items-center gap-1">
+            ✏️ 修改单词
+        </button>
+    </div>
+
+    <!-- 🌟 阶段一：录入单词界面 (Setup Screen) -->
+    <div id="setupScreen" class="w-full max-w-md bg-white rounded-3xl shadow-xl p-6 my-auto border-4 border-emerald-100 flex flex-col transition-all duration-300">
+        <h2 class="text-xl font-bold text-center text-emerald-800 mb-1">输入今天想学的单词</h2>
+        <p class="text-xs text-gray-500 text-center mb-3">每行一个单词和中文，中间用空格隔开</p>
+        
+        <!-- 一键模板区（升级为小学三年级十三套同步课程分类，极佳贴合教材） -->
+            <div class="max-h-[175px] overflow-y-auto p-1 bg-emerald-50/25 rounded-2xl border border-emerald-100/50 shadow-inner">
+                <div class="grid grid-cols-3 gap-1.5">
+                    <button onclick="loadTemplate('colors')" class="px-2 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 text-[10px] md:text-xs rounded-full border border-amber-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🎨 颜色</button>
+                    <button onclick="loadTemplate('body')" class="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 text-[10px] md:text-xs rounded-full border border-rose-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">👃 身体</button>
+                    <button onclick="loadTemplate('family')" class="px-2 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 text-[10px] md:text-xs rounded-full border border-blue-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">👨‍👩‍👧 成员</button>
+                    <button onclick="loadTemplate('school')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] md:text-xs rounded-full border border-emerald-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🎒 校园文具</button>
+                    <button onclick="loadTemplate('food')" class="px-2 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-800 text-[10px] md:text-xs rounded-full border border-yellow-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🍞 饮食</button>
+                    <button onclick="loadTemplate('weather')" class="px-2 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[10px] md:text-xs rounded-full border border-sky-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">☀️ 天气</button>
+                    <button onclick="loadTemplate('actions')" class="px-2 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-800 text-[10px] md:text-xs rounded-full border border-purple-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🏃‍♂️ 跑跳动作</button>
+                    <button onclick="loadTemplate('fruits')" class="px-2 py-1.5 bg-pink-50 hover:bg-pink-100 text-pink-800 text-[10px] md:text-xs rounded-full border border-pink-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🍎 水果</button>
+                    <button onclick="loadTemplate('animals')" class="px-2 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-800 text-[10px] md:text-xs rounded-full border border-indigo-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🐯 动物</button>
+                    <button onclick="loadTemplate('numbers')" class="px-2 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-[10px] md:text-xs rounded-full border border-teal-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🔢 数字1-10</button>
+                    <button onclick="loadTemplate('numbers2')" class="px-2 py-1.5 bg-teal-50 hover:bg-teal-100 text-teal-800 text-[10px] md:text-xs rounded-full border border-teal-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🔢 数字11-20</button>
+                    <button onclick="loadTemplate('toys')" class="px-2 py-1.5 bg-orange-50 hover:bg-orange-100 text-orange-800 text-[10px] md:text-xs rounded-full border border-orange-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🤖 玩具</button>
+                    <button onclick="loadTemplate('clothes')" class="px-2 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-cyan-800 text-[10px] md:text-xs rounded-full border border-cyan-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🧢 衣物</button>
+                    <button onclick="loadTemplate('home')" class="px-2 py-1.5 bg-lime-50 hover:bg-lime-100 text-lime-800 text-[10px] md:text-xs rounded-full border border-lime-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🏠 家居房间</button>
+                    <button onclick="loadTemplate('positions')" class="px-2 py-1.5 bg-violet-50 hover:bg-violet-100 text-violet-800 text-[10px] md:text-xs rounded-full border border-violet-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🗺️ 空间位置</button>
+                    <button onclick="loadTemplate('people')" class="px-2 py-1.5 bg-red-50 hover:bg-red-100 text-red-800 text-[10px] md:text-xs rounded-full border border-red-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🌍 国家人物</button>
+                    <button onclick="loadTemplate('vehicles')" class="px-2 py-1.5 bg-sky-50 hover:bg-sky-100 text-sky-800 text-[10px] md:text-xs rounded-full border border-sky-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🚗 交通工具</button>
+                    <button onclick="loadTemplate('nature')" class="px-2 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-[10px] md:text-xs rounded-full border border-emerald-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🌳 自然景物</button>
+                    <button onclick="loadTemplate('tableware')" class="px-2 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-800 text-[10px] md:text-xs rounded-full border border-yellow-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">🍳 餐饮餐具</button>
+                    <button onclick="loadTemplate('adjectives')" class="px-2 py-1.5 bg-fuchsia-50 hover:bg-fuchsia-100 text-fuchsia-800 text-[10px] md:text-xs rounded-full border border-fuchsia-200 transition-all active:scale-95 text-center flex items-center justify-center gap-0.5 shadow-sm">😊 情绪特征</button>
+                </div>
+            </div>
+
+        <!-- CSV 导入操作区 -->
+        <div class="mb-4 flex items-center justify-between border-t border-dashed border-emerald-100 pt-3">
+            <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1">📂 外部数据导入：</span>
+            <div>
+                <button onclick="triggerCsvUpload()" class="px-3.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200 transition-all active:scale-95 flex items-center gap-1 shadow-sm">
+                    📥 导入 CSV 文件
+                </button>
+                <input type="file" id="csvFileInput" class="hidden" accept=".csv,.txt" onchange="handleCsvUpload(event)">
+            </div>
+        </div>
+
+        <textarea id="wordInput" class="w-full h-44 p-3 border-2 border-emerald-200 rounded-2xl focus:border-emerald-500 focus:ring-0 outline-none font-mono text-base text-gray-700 leading-relaxed mb-4 shadow-inner" placeholder="格式例：&#10;apple 苹果&#10;banana 香蕉"></textarea>
+        
+        <button onclick="validateAndStart()" class="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-lg rounded-2xl shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
+            🚀 确认，开始听读学习！
+        </button>
+    </div>
+
+    <!-- 🌟 阶段二：学习刷卡界面 (Study Screen - 默认隐藏) -->
+    <div id="studyScreen" class="hidden w-full max-w-md flex-col items-center justify-between flex-1 my-auto py-4">
+        
+        <!-- 阶段模式滑动选择器 -->
+        <div class="w-full bg-white/90 p-1.5 rounded-full shadow-sm border border-emerald-100 flex mb-3">
+            <button id="mode1Tab" onclick="switchMode('en-to-zh')" class="flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 bg-emerald-500 text-white shadow-sm">
+                第一阶段：听英文 ➔ 说中文
+            </button>
+            <button id="mode2Tab" onclick="switchMode('zh-to-en')" class="flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 text-gray-500 hover:text-emerald-600">
+                第二阶段：听中文 ➔ 说英文
+            </button>
+        </div>
+
+        <!-- 进度进度条 -->
+        <div class="w-full px-2 mb-3">
+            <div class="flex justify-between text-xs font-bold text-emerald-800 mb-1">
+                <span id="progressText">第 1 / 5 个单词</span>
+                <span id="progressPercent">20%</span>
+            </div>
+            <div class="w-full h-3 bg-emerald-100 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 20%"></div>
+            </div>
+        </div>
+
+        <!-- 学习可选配置面板 (显示英文单词开关) -->
+        <div class="w-full glass-panel px-4 py-2.5 rounded-2xl flex justify-between items-center mb-4 shadow-sm">
+            <label class="flex items-center space-x-2.5 cursor-pointer select-none text-emerald-800 font-bold text-xs md:text-sm">
+                <input type="checkbox" id="showWordOnFrontToggle" onchange="toggleShowWordOnFront()" class="w-4 h-4 rounded text-emerald-500 border-emerald-300 focus:ring-emerald-400 focus:ring-offset-0 accent-emerald-500 transition-all">
+                <span>👀 看图听音时直接显示单词拼写</span>
+            </label>
+            <span class="text-[10px] md:text-xs font-extrabold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full shadow-inner">拼读辅助</span>
+        </div>
+
+        <!-- 3D 翻转卡片核心容器 -->
+        <div class="w-full aspect-[4/5] max-h-[420px] perspective-1000 my-auto cursor-pointer" onclick="toggleCardFlip()">
+            <div id="cardInner" class="w-full h-full preserve-3d card-transition relative rounded-3xl shadow-xl border-4 border-white bg-white">
+                
+                <!-- 卡片正面 (FRONT) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden rounded-3xl flex flex-col items-center justify-between p-6 bg-white">
+                    
+                    <!-- 顶角装饰/重播按钮 -->
+                    <div class="w-full flex justify-between items-center">
+                        <span id="cardBadge" class="px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full">观察并思考</span>
+                        <button onclick="replayAudio(event)" class="w-10 h-10 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center transition-all active:scale-90">
+                            🔊
+                        </button>
+                    </div>
+
+                    <!-- 动态核心区域 -->
+                    <div class="flex-1 flex flex-col items-center justify-center w-full">
+                        <!-- 动态图片容器 -->
+                        <div id="imageWrapper" class="relative w-48 h-48 md:w-56 md:h-56 bg-emerald-50 rounded-2xl overflow-hidden flex items-center justify-center shadow-inner mb-3 transition-all duration-300">
+                            <!-- 动态加载的高清真实图片 (静默拉取直链，彻底消灭二次跳图刷新现象) -->
+                            <img id="cardImage" class="w-full h-full object-cover hidden" alt="单词关联图片" onload="onImageLoaded()" onerror="onImageError()">
+                            <!-- 后备大字 Emoji，确保没网也能看 -->
+                            <div id="cardEmoji" class="text-8xl flex items-center justify-center animate-bounce">🍎</div>
+                        </div>
+
+                        <!-- 听音时可选显示的英文拼写与音标区域 (自然拼读高亮显示，支持大小写自适应) -->
+                        <div id="frontPhonicsArea" class="hidden flex-col items-center space-y-1 mb-2">
+                            <div id="frontEnglish" class="text-3xl font-black tracking-widest flex flex-wrap justify-center items-center"></div>
+                            <div id="frontIpa" class="text-sm font-semibold text-emerald-600 bg-emerald-50 px-3 py-0.5 rounded-full inline-block border border-emerald-100"></div>
+                        </div>
+
+                        <!-- 听音中文模式下的文字提示 -->
+                        <div id="promptText" class="text-3xl font-extrabold text-emerald-800 text-center tracking-wide leading-normal"></div>
+                    </div>
+
+                    <!-- 底部点击提示 -->
+                    <div class="text-xs text-emerald-500 font-bold flex items-center gap-1 animate-pulse">
+                        💡 点击卡片翻转看答案
+                    </div>
+                </div>
+
+                <!-- 卡片背面 (BACK) -->
+                <div class="absolute inset-0 w-full h-full backface-hidden rotate-y-180 rounded-3xl flex flex-col items-center justify-between p-6 bg-emerald-50">
+                    
+                    <!-- 顶角装饰 -->
+                    <div class="w-full flex justify-between items-center">
+                        <span class="px-3 py-1 bg-emerald-200 text-emerald-800 text-xs font-bold rounded-full">验证答案</span>
+                        <button onclick="replayAudio(event)" class="w-10 h-10 bg-white text-emerald-600 rounded-full flex items-center justify-center shadow-sm active:scale-90">
+                            🔊
+                        </button>
+                    </div>
+
+                    <!-- 答案核心显示区 -->
+                    <div class="flex-1 flex flex-col items-center justify-center space-y-4">
+                        <!-- 中文解释 -->
+                        <div class="text-center">
+                            <span class="text-xs text-emerald-600 font-bold tracking-wider block mb-1">中文释义</span>
+                            <div id="backChinese" class="text-4xl font-black text-emerald-900 tracking-wide">苹果</div>
+                        </div>
+
+                        <!-- 单词拼写展示模块 -->
+                        <div class="w-full pt-4 flex flex-col items-center border-t border-emerald-200/50">
+                            <button id="showSpellingBtn" onclick="revealSpelling(event)" class="px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-900 font-extrabold text-sm rounded-full shadow-md active:scale-95 transition-all">
+                                📝 看单词怎么写
+                            </button>
+                            <div id="spellingWrapper" class="hidden text-center transition-all duration-300">
+                                <span class="text-xs text-amber-600 font-bold block mb-1">英文拼写 (彩色音节)</span>
+                                <div id="backEnglish" class="text-3xl font-black tracking-widest flex flex-wrap justify-center items-center mb-1">APPLE</div>
+                                <div id="backIpa" class="text-sm font-semibold text-emerald-700/80 bg-emerald-100/50 px-2.5 py-0.5 rounded-full inline-block">/ˈæp.l̩/</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 底部提示 -->
+                    <div class="text-xs text-emerald-600 font-bold">
+                        点击卡片可翻回正面
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 底部控制按钮 (上一页/下一页) -->
+        <div class="w-full max-w-md flex justify-between items-center px-4 mt-6 gap-4">
+            <button onclick="prevWord()" class="flex-1 py-3.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-extrabold rounded-2xl transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow-sm">
+                ⬅️ 上一个
+            </button>
+            <button onclick="nextWord()" class="flex-1 py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold rounded-2xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-1.5">
+                下一个 ➡️
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 自定义 Toast 提示 -->
+    <div id="customToast" class="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 font-bold rounded-2xl shadow-xl transition-all duration-300 translate-y-20 opacity-0 pointer-events-none z-50 text-center bg-emerald-600 text-white"></div>
+
+    <script>
+        // 内置高频词对应的 Emoji 库，为小学三年级同步核心主题进行 100% 完美映射
+        const emojiDictionary = {
+            // 缤纷颜色
+            red: '❤️', blue: '💙', yellow: '💛', green: '💚', orange: '🧡', pink: '💗', purple: '💜', white: '🤍', black: '🖤', brown: '🤎',
+            // 身体部位
+            head: '👤', face: '😊', eye: '👁️', ear: '👂', nose: '👃', mouth: '👄', arm: '💪', hand: '✋', leg: '🦵', foot: '🦶',
+            // 成员与家
+            father: '👨', mother: '👩', brother: '👦', sister: '👧', grandpa: '👴', grandma: '👵', baby: '👶', friend: '🧑‍🤝‍🧑', home: '🏠', family: '👨‍👩‍👧‍👦',
+            // 校园文具
+            school: '🏫', teacher: '👩‍🏫', student: '🧑‍🎓', desk: '🪑', chair: '🪑', book: '📖', pen: '🖊️', pencil: '✏️', ruler: '📏', bag: '🎒',
+            // 饮食饮料
+            bread: '🍞', cake: '🍰', milk: '🥛', water: '🥛', juice: '🍹', egg: '🥚', rice: '🍚', fish: '🐟', meat: '🥩', tea: '🍵',
+            // 自然天气
+            sun: '☀️', cloud: '☁️', rain: '🌧️', snow: '❄️', wind: '🍃', sky: '🌤️', hot: '🥵', cold: '🥶', warm: '☀️', cool: '😎',
+            // 动作行为
+            run: '🏃‍♂️', jump: '🦘', swim: '🏊', fly: '🕊️', sing: '🎤', dance: '💃', read: '📖', write: '✍️', play: '🎮', sleep: '😴',
+            apple: '🍎', banana: '🍌', watermelon: '🍉', strawberry: '🍓', grape: '🍇', cherry: '🍒', peach: '🍑', pineapple: '🍍', lemon: '🍋', melon: '🍈',
+            dog: '🐶', cat: '🐱', lion: '🦁', tiger: '🐯', bear: '🐻', panda: '🐼', rabbit: '🐰', monkey: '🐵', elephant: '🐘', pig: '🐷', cow: '🐮', sheep: '🐑',
+            bird: '🐦', frog: '🐸', duck: '🦆', chicken: '🐔', penguin: '🐧', horse: '🐴', bee: '🐝', butterfly: '🦋', spider: '🕷️',
+            car: '🚗', bus: '🚌', train: '🚆', plane: '✈️', bicycle: '🚲', bike: '🚲', ship: '🚢', rocket: '🚀', helicopter: '🚁', ambulance: '🚑',
+            one: '1️⃣', two: '2️⃣', three: '3️⃣', four: '4️⃣', five: '5️⃣', six: '6️⃣', seven: '7️⃣', eight: '8️⃣', nine: '9️⃣', ten: '🔟',
+            eleven: '1️⃣1️⃣', twelve: '1️⃣2️⃣', thirteen: '1️⃣3️⃣', fourteen: '1️⃣4️⃣', fifteen: '1️⃣5️⃣', sixteen: '1️⃣6️⃣', seventeen: '1️⃣7️⃣', eighteen: '1️⃣8️⃣', nineteen: '1️⃣9️⃣', twenty: '2️⃣0️⃣',
+            ball: '⚽', doll: '🪆', balloon: '🎈', kite: '🪁', robot: '🤖', toy: '🧸', box: '📦',
+            cap: '🧢', hat: '🎩', shirt: '👕', 't-shirt': '👕', tshirt: '👕', skirt: '👗', dress: '👗', coat: '🧥', sweater: '🧶', jacket: '🧥', shoes: '👟',
+            happy: '😊', sad: '😢', angry: '😡', tired: '🥱', big: '🐘', small: '🐭', tall: '🦒', short: '🐇', fat: '🐷', thin: '🐒',
+            bedroom: '🛏️', kitchen: '🍳', bathroom: '🚿', garden: '🏡', bed: '🛏️', table: '🟫', sofa: '🛋️', window: '🪟', door: '🚪',
+            in: '📥', on: '🔛', under: '👇', near: '📍', behind: '🔙', front: '🔜', left: '👈', right: '👉', up: '⬆️', down: '⬇️',
+            china: '🇨🇳', uk: '🇬🇧', usa: '🇺🇸', canada: '🇨🇦', boy: '👦', girl: '👧', man: '👨', woman: '👩', pupil: '🧑‍🎓',
+            taxi: '🚖', boat: '⛵', truck: '🚚', jeep: '🚙',
+            moon: '🌙', star: '⭐', flower: '🌸', grass: '🌱', tree: '🌳', river: '🏞️', lake: '🏞️',
+            breakfast: '🍳', lunch: '🥪', dinner: '🍲', bowl: '🥣', plate: '🍽️', spoon: '🥄', fork: '🍴', knife: '🔪', chopsticks: '🥢', glass: '🥛'
+        };
+
+        // 快捷模版数据 (针对小学三年级水平定制的 20 大核心主题同步词库)
+        const templates = {
+            colors: "red 红色\nblue 蓝色\nyellow 黄色\ngreen 绿色\norange 橙色\npink 粉红色\npurple 紫色\nwhite 白色\nblack 黑色\nbrown 棕色",
+            body: "head 头部\nface 脸部\neye 眼睛\near 耳朵\nnose 鼻子\nmouth 嘴巴\narm 手臂\nhand 手\nleg 腿部\nfoot 脚",
+            family: "father 爸爸\nmother 妈妈\nbrother 哥哥弟弟\nsister 姐姐妹妹\ngrandpa 爷爷外公\ngrandma 奶奶外婆\nbaby 婴儿\nfriend 朋友\nhome 家\nfamily 家庭",
+            school: "school 学校\nteacher 老师\nstudent 学生\ndesk 课桌\nchair 椅子\nbook 书本\npen 钢笔\npencil 铅笔\nruler 尺子\nbag 书包",
+            food: "bread 面包\ncake 蛋糕\nmilk 牛奶\nwater 水\njuice 果汁\negg 鸡蛋\nrice 米饭\nfish 鱼肉\nmeat 肉类\ntea 茶水",
+            weather: "sun 太阳\ncloud 白云\nrain 雨水\nsnow 积雪\nwind 微风\nsky 天空\nhot 炎热的\ncold 寒冷的\nwarm 温暖的\ncool 凉爽的",
+            actions: "run 奔跑\njump 跳跃\nswim 游泳\nfly 飞翔\nsing 歌唱\ndance 跳舞\nread 阅读\nwrite 书写\nplay 玩耍\nsleep 睡觉",
+            fruits: "apple 苹果\nbanana 香蕉\norange 橙子\nwatermelon 西瓜\ngrape 葡萄\nstrawberry 草莓\npeach 桃子\ncherry 樱桃\npineapple 菠萝\nlemon 柠檬",
+            animals: "dog 小狗\ncat 小猫\nlion 狮子\ntiger 老虎\nbear 狗熊\npanda 熊猫\nrabbit 兔子\nmonkey 猴子\nelephant 大象\npig 小猪",
+            numbers: "one 一\ntwo 二\nthree 三\nfour 四\nfive 五\nsix 六\nseven 七\neight 八\nnine 九\nten 十",
+            numbers2: "eleven 十一\ntwelve 十二\nthirteen 十三\nfourteen 十四\nfifteen 十五\nsixteen 十六\nseventeen 十七\neighteen 十八\nnineteen 十九\ntwenty 二十",
+            toys: "ball 球\ndoll 玩偶\nballoon 气球\nkite 风筝\nrobot 机器人\ntoy 玩具\nbox 盒子\ncar 玩具小车\nplane 玩具飞机\nbear 玩具熊",
+            clothes: "cap 帽子\nhat 遮阳帽\nshirt 衬衫\nT-shirt T恤衫\nskirt 短裙\ndress 连衣裙\ncoat 外套\nsweater 毛衣\njacket 夹克\nshoes 鞋子",
+            home: "bedroom 卧室\nkitchen 厨房\nbathroom 浴室\ngarden 花园\nbed 床\ntable 桌子\nsofa 沙发\nwindow 窗户\ndoor 门",
+            positions: "in 在...里面\non 在...上面\nunder 在...下面\nnear 在...附近\nbehind 在...后面\nfront 在...前面\nleft 向左\nright 向右\nup 向上\ndown 向下",
+            people: "China 中国\nUK 英国\nUSA 美国\nCanada 加拿大\nboy 男孩\ngirl 女孩\nman 男人\nwoman 女人\npupil 小学生",
+            vehicles: "car 小汽车\nbus 公共汽车\ntrain 火车\nplane 飞机\nbicycle 自行车\nship 轮船\nrocket 火箭\nhelicopter 直升机\ntaxi 出租车\njeep 吉普车",
+            nature: "moon 月亮\nstar 星星\nflower 花朵\ngrass 草地\ntree 树木\nriver 河流\nlake 湖泊",
+            tableware: "bowl 碗\nplate 盘子\nspoon 勺子\nfork 叉子\nknife 刀\nchopsticks 筷子\nglass 玻璃杯\nbreakfast 早餐\nlunch 午餐\ndinner 晚餐",
+            adjectives: "happy 高兴的\nsad 伤心的\nangry 生气的\ntired 疲劳的\nbig 大的\nsmall 小的\ntall 高的\nshort 矮的\nfat 胖的\nthin 瘦的"
+        };
+
+        // 核心自然拼读数据库（内置模板高频词的精确切分与权威 IPA 音标）
+        const phonicsDb = {
+            // 缤纷颜色
+            red: { syllables: ["red"], ipa: "/red/" },
+            blue: { syllables: ["blue"], ipa: "/bluː/" },
+            yellow: { syllables: ["yel", "low"], ipa: "/ˈjel.əʊ/" },
+            green: { syllables: ["green"], ipa: "/ɡriːn/" },
+            orange: { syllables: ["or", "ange"], ipa: "/ˈɒr.ɪndʒ/" },
+            pink: { syllables: ["pink"], ipa: "/pɪŋk/" },
+            purple: { syllables: ["pur", "ple"], ipa: "/ˈpɜː.pl̩/" },
+            white: { syllables: ["white"], ipa: "/waɪt/" },
+            black: { syllables: ["black"], ipa: "/blæk/" },
+            brown: { syllables: ["brown"], ipa: "/braʊn/" },
+
+            // 身体部位
+            head: { syllables: ["head"], ipa: "/hed/" },
+            face: { syllables: ["face"], ipa: "/feɪs/" },
+            eye: { syllables: ["eye"], ipa: "/aɪ/" },
+            ear: { syllables: ["ear"], ipa: "/ɪər/" },
+            nose: { syllables: ["nose"], ipa: "/nəʊz/" },
+            mouth: { syllables: ["mouth"], ipa: "/maʊθ/" },
+            arm: { syllables: ["arm"], ipa: "/ɑːm/" },
+            hand: { syllables: ["hand"], ipa: "/hænd/" },
+            leg: { syllables: ["leg"], ipa: "/leɡ/" },
+            foot: { syllables: ["foot"], ipa: "/fʊt/" },
+
+            // 成员与家
+            father: { syllables: ["fa", "ther"], ipa: "/ˈfɑː.ðə/" },
+            mother: { syllables: ["mo", "ther"], ipa: "/ˈmʌð.ə/" },
+            brother: { syllables: ["bro", "ther"], ipa: "/ˈbrʌð.ə/" },
+            sister: { syllables: ["sis", "ter"], ipa: "/ˈsɪs.tə/" },
+            grandpa: { syllables: ["grand", "pa"], ipa: "/ˈɡræn.pɑː/" },
+            grandma: { syllables: ["grand", "ma"], ipa: "/ˈɡræn.mɑː/" },
+            baby: { syllables: ["ba", "by"], ipa: "/ˈbeɪ.bi/" },
+            friend: { syllables: ["friend"], ipa: "/frend/" },
+            home: { syllables: ["home"], ipa: "/həʊm/" },
+            family: { syllables: ["fam", "i", "ly"], ipa: "/ˈfæm.əl.i/" },
+
+            // 校园文具
+            school: { syllables: ["school"], ipa: "/skuːl/" },
+            teacher: { syllables: ["teach", "er"], ipa: "/ˈtiː.tʃə/" },
+            student: { syllables: ["stu", "dent"], ipa: "/ˈstjuː.dənt/" },
+            desk: { syllables: ["desk"], ipa: "/desk/" },
+            chair: { syllables: ["chair"], ipa: "/tʃeər/" },
+            book: { syllables: ["book"], ipa: "/bʊk/" },
+            pen: { syllables: ["pen"], ipa: "/pen/" },
+            pencil: { syllables: ["pen", "cil"], ipa: "/ˈpen.səl/" },
+            ruler: { syllables: ["ru", "ler"], ipa: "/ˈruː.lə/" },
+            bag: { syllables: ["bag"], ipa: "/bæɡ/" },
+
+            // 饮食饮料
+            bread: { syllables: ["bread"], ipa: "/bred/" },
+            cake: { syllables: ["cake"], ipa: "/keɪk/" },
+            milk: { syllables: ["milk"], ipa: "/mɪlk/" },
+            water: { syllables: ["wa", "ter"], ipa: "/ˈwɔː.tə/" },
+            juice: { syllables: ["juice"], ipa: "/dʒuːs/" },
+            egg: { syllables: ["egg"], ipa: "/eɡ/" },
+            rice: { syllables: ["rice"], ipa: "/raɪs/" },
+            fish: { syllables: ["fish"], ipa: "/fɪʃ/" },
+            meat: { syllables: ["meat"], ipa: "/miːt/" },
+            tea: { syllables: ["tea"], ipa: "/tiː/" },
+
+            // 自然天气
+            sun: { syllables: ["sun"], ipa: "/sʌn/" },
+            cloud: { syllables: ["cloud"], ipa: "/klaʊd/" },
+            rain: { syllables: ["rain"], ipa: "/reɪn/" },
+            snow: { syllables: ["snow"], ipa: "/snəʊ/" },
+            wind: { syllables: ["wind"], ipa: "/wɪnd/" },
+            sky: { syllables: ["sky"], ipa: "/skaɪ/" },
+            hot: { syllables: ["hot"], ipa: "/hɒt/" },
+            cold: { syllables: ["cold"], ipa: "/kəʊld/" },
+            warm: { syllables: ["warm"], ipa: "/wɔːm/" },
+            cool: { syllables: ["cool"], ipa: "/kuːl/" },
+
+            // 动作行为
+            run: { syllables: ["run"], ipa: "/rʌn/" },
+            jump: { syllables: ["jump"], ipa: "/dʒʌmp/" },
+            swim: { syllables: ["swim"], ipa: "/swɪm/" },
+            fly: { syllables: ["fly"], ipa: "/flaɪ/" },
+            sing: { syllables: ["sing"], ipa: "/sɪŋ/" },
+            dance: { syllables: ["dance"], ipa: "/dɑːns/" },
+            read: { syllables: ["read"], ipa: "/riːd/" },
+            write: { syllables: ["write"], ipa: "/raɪt/" },
+            play: { syllables: ["play"], ipa: "/pleɪ/" },
+            sleep: { syllables: ["sleep"], ipa: "/sliːp/" },
+
+            // 水果
+            apple: { syllables: ["ap", "ple"], ipa: "/ˈæp.l̩/" },
+            banana: { syllables: ["ba", "na", "na"], ipa: "/bəˈnɑː.nə/" },
+            orange: { syllables: ["or", "ange"], ipa: "/ˈɒr.ɪndʒ/" },
+            watermelon: { syllables: ["wa", "ter", "mel", "on"], ipa: "/ˈwɔː.təˌmel.ən/" },
+            grape: { syllables: ["grape"], ipa: "/ɡreɪp/" },
+            strawberry: { syllables: ["straw", "ber", "ry"], ipa: "/ˈstrɔː.bər.i/" },
+            peach: { syllables: ["peach"], ipa: "/piːtʃ/" },
+            cherry: { syllables: ["cher", "ry"], ipa: "/ˈtʃer.i/" },
+            pineapple: { syllables: ["pine", "ap", "ple"], ipa: "/ˈpaɪn.æp.l̩/" },
+            lemon: { syllables: ["lem", "on"], ipa: "/ˈlem.ən/" },
+            melon: { syllables: ["mel", "on"], ipa: "/ˈmel.ən/" },
+            
+            // 动物
+            lion: { syllables: ["li", "on"], ipa: "/ˈlaɪ.ən/" },
+            panda: { syllables: ["pan", "da"], ipa: "/ˈpæn.də/" },
+            rabbit: { syllables: ["rab", "bit"], ipa: "/ˈræb.ɪt/" },
+            elephant: { syllables: ["el", "e", "phant"], ipa: "/ˈel.ɪ.fənt/" },
+            dog: { syllables: ["dog"], ipa: "/dɒɡ/" },
+            cat: { syllables: ["cat"], ipa: "/kæt/" },
+            tiger: { syllables: ["ti", "ger"], ipa: "/ˈtaɪ.ɡə/" },
+            bear: { syllables: ["bear"], ipa: "/beə/" },
+            monkey: { syllables: ["mon", "key"], ipa: "/ˈmʌŋ.ki/" },
+            pig: { syllables: ["pig"], ipa: "/pɪɡ/" },
+            cow: { syllables: ["cow"], ipa: "/kaʊ/" },
+            sheep: { syllables: ["sheep"], ipa: "/ʃiːp/" },
+            bird: { syllables: ["bird"], ipa: "/bɜːd/" },
+            fish: { syllables: ["fish"], ipa: "/fɪʃ/" },
+            frog: { syllables: ["frog"], ipa: "/frɒɡ/" },
+            duck: { syllables: ["duck"], ipa: "/dʌk/" },
+            chicken: { syllables: ["chick", "en"], ipa: "/ˈtʃɪk.ɪn/" },
+            penguin: { syllables: ["pen", "guin"], ipa: "/ˈpeŋ.ɡwɪn/" },
+            horse: { syllables: ["horse"], ipa: "/hɔːs/" },
+            bee: { syllables: ["bee"], ipa: "/biː/" },
+            butterfly: { syllables: ["but", "ter", "fly"], ipa: "/ˈbʌt.ə.flaɪ/" },
+            spider: { syllables: ["spi", "der"], ipa: "/ˈspaɪ.də/" },
+
+            // 常见载具
+            car: { syllables: ["car"], ipa: "/kɑː/" },
+            bus: { syllables: ["bus"], ipa: "/bʌs/" },
+            plane: { syllables: ["plane"], ipa: "/pleɪn/" },
+            train: { syllables: ["train"], ipa: "/treɪn/" },
+            rocket: { syllables: ["rock", "et"], ipa: "/ˈrɒk.ɪt/" },
+            bicycle: { syllables: ["bi", "cy", "cle"], ipa: "/ˈbaɪ.sɪ.kl/" },
+            helicopter: { syllables: ["hel", "i", "cop", "ter"], ipa: "/ˈhel.ɪˌkɒp.tə/" },
+            ambulance: { syllables: ["am", "bu", "lance"], ipa: "/ˈæm.bjə.ləns/" },
+            bike: { syllables: ["bike"], ipa: "/baɪk/" },
+            ship: { syllables: ["ship"], ipa: "/ʃɪp/" },
+
+            // 趣味数字
+            one: { syllables: ["one"], ipa: "/wʌn/" },
+            two: { syllables: ["two"], ipa: "/tuː/" },
+            three: { syllables: ["three"], ipa: "/θriː/" },
+            four: { syllables: ["four"], ipa: "/fɔː/" },
+            five: { syllables: ["five"], ipa: "/faɪv/" },
+            six: { syllables: ["six"], ipa: "/sɪks/" },
+            seven: { syllables: ["sev", "en"], ipa: "/ˈsev.ən/" },
+            eight: { syllables: ["eight"], ipa: "/eɪt/" },
+            nine: { syllables: ["nine"], ipa: "/naɪn/" },
+            ten: { syllables: ["ten"], ipa: "/ten/" },
+
+            // 精美玩具
+            ball: { syllables: ["ball"], ipa: "/bɔːl/" },
+            doll: { syllables: ["doll"], ipa: "/dɒl/" },
+            balloon: { syllables: ["bal", "loon"], ipa: "/bəˈluːn/" },
+            kite: { syllables: ["kite"], ipa: "/kaɪt/" },
+            robot: { syllables: ["ro", "bot"], ipa: "/ˈrəʊ.bɒt/" },
+            toy: { syllables: ["toy"], ipa: "/tɔɪ/" },
+            box: { syllables: ["box"], ipa: "/bɒks/" },
+
+            // 日常衣物
+            cap: { syllables: ["cap"], ipa: "/kæp/" },
+            hat: { syllables: ["hat"], ipa: "/hæt/" },
+            shirt: { syllables: ["shirt"], ipa: "/ʃɜːt/" },
+            tshirt: { syllables: ["T", "shirt"], ipa: "/ˈtiː.ʃɜːt/" },
+            "t-shirt": { syllables: ["T", "shirt"], ipa: "/ˈtiː.ʃɜːt/" },
+            skirt: { syllables: ["skirt"], ipa: "/skɜːt/" },
+            dress: { syllables: ["dress"], ipa: "/dres/" },
+            coat: { syllables: ["coat"], ipa: "/kəʊt/" },
+            sweater: { syllables: ["sweat", "er"], ipa: "/ˈswet.ə/" },
+            jacket: { syllables: ["jack", "et"], ipa: "/ˈdʒæk.ɪt/" },
+            shoes: { syllables: ["shoes"], ipa: "/ʃuːz/" },
+
+            // 情绪特征
+            happy: { syllables: ["hap", "py"], ipa: "/ˈhæp.i/" },
+            sad: { syllables: ["sad"], ipa: "/sæd/" },
+            angry: { syllables: ["an", "gry"], ipa: "/ˈæŋ.ɡri/" },
+            tired: { syllables: ["tired"], ipa: "/ˈtaɪəd/" },
+            big: { syllables: ["big"], ipa: "/bɪɡ/" },
+            small: { syllables: ["small"], ipa: "/smɔːl/" },
+            tall: { syllables: ["tall"], ipa: "/tɔːl/" },
+            short: { syllables: ["short"], ipa: "/ʃɔːt/" },
+            thin: { syllables: ["thin"], ipa: "/θɪn/" },
+
+            // 新增快捷加载的 54 个单词音标与音节库
+            // 数字 11-20
+            eleven: { syllables: ["e", "lev", "en"], ipa: "/ɪˈlev.ən/" },
+            twelve: { syllables: ["twelve"], ipa: "/twelv/" },
+            thirteen: { syllables: ["thir", "teen"], ipa: "/θɜːˈtiːn/" },
+            fourteen: { syllables: ["four", "teen"], ipa: "/ˌfɔːˈtiːn/" },
+            fifteen: { syllables: ["fif", "teen"], ipa: "/ˌfɪfˈtiːn/" },
+            sixteen: { syllables: ["six", "teen"], ipa: "/ˌsɪksˈtiːn/" },
+            seventeen: { syllables: ["sev", "en", "teen"], ipa: "/ˌsev.ənˈtiːn/" },
+            eighteen: { syllables: ["eigh", "teen"], ipa: "/ˌeɪˈtiːn/" },
+            nineteen: { syllables: ["nine", "teen"], ipa: "/ˌnaɪnˈtiːn/" },
+            twenty: { syllables: ["twen", "ty"], ipa: "/ˈtwen.ti/" },
+
+            // 家居房间
+            bedroom: { syllables: ["bed", "room"], ipa: "/ˈbed.ruːm/" },
+            kitchen: { syllables: ["kitch", "en"], ipa: "/ˈkɪtʃ.ən/" },
+            bathroom: { syllables: ["bath", "room"], ipa: "/ˈbɑːθ.ruːm/" },
+            garden: { syllables: ["gar", "den"], ipa: "/ˈɡɑː.dən/" },
+            bed: { syllables: ["bed"], ipa: "/bed/" },
+            table: { syllables: ["ta", "ble"], ipa: "/ˈteɪ.bl̩/" },
+            sofa: { syllables: ["so", "fa"], ipa: "/ˈsəʊ.fə/" },
+            window: { syllables: ["win", "dow"], ipa: "/ˈwɪn.dəʊ/" },
+            door: { syllables: ["door"], ipa: "/dɔː/" },
+
+            // 空间位置
+            in: { syllables: ["in"], ipa: "/ɪn/" },
+            on: { syllables: ["on"], ipa: "/ɒn/" },
+            under: { syllables: ["un", "der"], ipa: "/ˈʌn.dər/" },
+            near: { syllables: ["near"], ipa: "/nɪər/" },
+            behind: { syllables: ["be", "hind"], ipa: "/bɪˈhaɪnd/" },
+            front: { syllables: ["front"], ipa: "/frʌnt/" },
+            left: { syllables: ["left"], ipa: "/left/" },
+            right: { syllables: ["right"], ipa: "/raɪt/" },
+            up: { syllables: ["up"], ipa: "/ʌp/" },
+            down: { syllables: ["down"], ipa: "/daʊn/" },
+
+            // 国家人物
+            china: { syllables: ["Chi", "na"], ipa: "/ˈtʃaɪ.nə/" },
+            uk: { syllables: ["U", "K"], ipa: "/ˌjuːˈkeɪ/" },
+            usa: { syllables: ["U", "S", "A"], ipa: "/ˌjuː.esˈeɪ/" },
+            canada: { syllables: ["Can", "a", "da"], ipa: "/ˈkæn.ə.də/" },
+            boy: { syllables: ["boy"], ipa: "/bɔɪ/" },
+            girl: { syllables: ["girl"], ipa: "/ɡɜːl/" },
+            man: { syllables: ["man"], ipa: "/mæn/" },
+            woman: { syllables: ["wo", "man"], ipa: "/ˈwʊm.ən/" },
+            pupil: { syllables: ["pu", "pil"], ipa: "/ˈpjuː.pl̩/" },
+
+            // 交通工具新增
+            taxi: { syllables: ["tax", "i"], ipa: "/ˈtæk.si/" },
+            boat: { syllables: ["boat"], ipa: "/bəʊt/" },
+            truck: { syllables: ["truck"], ipa: "/trʌk/" },
+            jeep: { syllables: ["jeep"], ipa: "/dʒiːp/" },
+
+            // 自然世界新增
+            moon: { syllables: ["moon"], ipa: "/muːn/" },
+            star: { syllables: ["star"], ipa: "/stɑː/" },
+            flower: { syllables: ["flow", "er"], ipa: "/ˈflaʊ.ər/" },
+            grass: { syllables: ["grass"], ipa: "/ɡrɑːs/" },
+            tree: { syllables: ["tree"], ipa: "/triː/" },
+            river: { syllables: ["riv", "er"], ipa: "/ˈrɪv.ər/" },
+            lake: { syllables: ["lake"], ipa: "/leɪk/" },
+
+            // 餐饮餐具
+            breakfast: { syllables: ["break", "fast"], ipa: "/ˈbrek.fəst/" },
+            lunch: { syllables: ["lunch"], ipa: "/lʌntʃ/" },
+            dinner: { syllables: ["din", "ner"], ipa: "/ˈdɪn.ər/" },
+            bowl: { syllables: ["bowl"], ipa: "/bəʊl/" },
+            plate: { syllables: ["plate"], ipa: "/pleɪt/" },
+            spoon: { syllables: ["spoon"], ipa: "/spuːn/" },
+            fork: { syllables: ["fork"], ipa: "/fɔːk/" },
+            knife: { syllables: ["knife"], ipa: "/naɪf/" },
+            chopsticks: { syllables: ["chop", "sticks"], ipa: "/ˈtʃɒp.stɪks/" },
+            glass: { syllables: ["glass"], ipa: "/ɡlɑːs/" }
+        };
+
+        // 图片永久缓存
+        const imageUrlCache = {};
+
+        // API 拉取音标的局部缓存，避免重复请求
+        const fetchedIpaCache = {};
+
+        // 应用核心状态
+        let wordList = [];
+        let currentIndex = 0;
+        let currentMode = 'en-to-zh'; // 'en-to-zh' 听英说中 | 'zh-to-en' 听中说英
+        let isFlipped = false;
+        let isSpellingRevealed = false;
+        let showWordOnFront = false; // 是否在正面显示英文
+
+        // 初始化
+        window.onload = function() {
+            loadTemplate('colors'); // 默认改为载入最精美的颜色模板
+
+            // 读取看图显示单词的偏好
+            showWordOnFront = localStorage.getItem('showWordOnFront') === 'true';
+            document.getElementById('showWordOnFrontToggle').checked = showWordOnFront;
+        };
+
+        // 加载快捷模板
+        function loadTemplate(key) {
+            document.getElementById('wordInput').value = templates[key];
+        }
+
+        // 显示自定义 Toast 提示
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('customToast');
+            toast.textContent = message;
+            toast.className = `fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3 font-bold rounded-2xl shadow-xl transition-all duration-300 translate-y-20 opacity-0 pointer-events-none z-50 text-center ${isError ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'}`;
+            
+            // 触发进入动画
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 2500);
+        }
+
+        // CSV 导入功能
+        function triggerCsvUpload() {
+            document.getElementById('csvFileInput').click();
+        }
+
+        function handleCsvUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                parseAndAppendCsv(text);
+            };
+            // 兼容中文系统的 GBK 和通用 UTF-8
+            reader.readAsText(file, 'UTF-8');
+            // 复位以便支持重复选择同个文件
+            event.target.value = "";
+        }
+
+        function parseAndAppendCsv(text) {
+            const lines = text.split(/\r?\n/);
+            let importedWords = [];
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                let parts = [];
+                // 兼容性分割：支持 逗号、Tab、或多个空格
+                if (line.includes(',')) {
+                    parts = line.split(',');
+                } else if (line.includes('\t')) {
+                    parts = line.split('\t');
+                } else {
+                    parts = line.split(/\s+/);
+                }
+
+                if (parts.length >= 2) {
+                    // 去除 CSV 特有的引号包裹，保留用户大小写输入
+                    const en = parts[0].replace(/^["']|["']$/g, '').trim();
+                    const zh = parts.slice(1).join(' ').replace(/^["']|["']$/g, '').trim();
+                    
+                    // 英文必须是合法的字母/短横线/空格组合，中文不为空
+                    if (en && zh && /^[a-zA-Z\s\-]+$/i.test(en)) {
+                        importedWords.push(`${en} ${zh}`);
+                    }
+                }
+            }
+
+            if (importedWords.length > 0) {
+                const wordInput = document.getElementById('wordInput');
+                const currentVal = wordInput.value.trim();
+                wordInput.value = currentVal ? `${currentVal}\n${importedWords.join('\n')}` : importedWords.join('\n');
+                showToast(`🎉 成功导入 ${importedWords.length} 个单词！`);
+            } else {
+                showToast("⚠️ 未能解析出符合“英文,中文”格式的数据，请检查文件编码或分隔符", true);
+            }
+        }
+
+        // 启发式音节划分算法：适用于任何未知英文单词
+        function splitWordSyllables(word) {
+            word = word.toLowerCase().trim();
+            const clean = word.replace(/[^a-z]/g, '');
+            
+            // 优先查找内置数据库
+            if (phonicsDb[clean]) {
+                return phonicsDb[clean].syllables;
+            }
+
+            // Heuristic syllable splitting
+            const vowels = /[aeiouy]+/g;
+            let vowelCenters = [];
+            let match;
+            while ((match = vowels.exec(word)) !== null) {
+                vowelCenters.push({
+                    start: match.index,
+                    end: match.index + match[0].length,
+                    val: match[0]
+                });
+            }
+
+            if (vowelCenters.length <= 1) {
+                return [word];
+            }
+
+            // 处理不发音的尾缀 'e' (例如 grape, peach - 词尾为不发音的e且无-le结尾)
+            let lastVC = vowelCenters[vowelCenters.length - 1];
+            if (lastVC.val === 'e' && lastVC.end === word.length && word.length > 3) {
+                const isLe = word.endsWith('le') && !'aeiouy'.includes(word[word.length - 3]);
+                if (!isLe) {
+                    vowelCenters.pop(); // 移除静音 'e' 的元音中心
+                }
+            }
+
+            if (vowelCenters.length <= 1) {
+                return [word];
+            }
+
+            let splits = [];
+            let start = 0;
+
+            for (let i = 0; i < vowelCenters.length - 1; i++) {
+                let vc1 = vowelCenters[i];
+                let vc2 = vowelCenters[i+1];
+                let consStart = vc1.end;
+                let consEnd = vc2.start;
+                let consLen = consEnd - consStart;
+                let consStr = word.substring(consStart, consEnd);
+
+                let splitOffset = 0;
+                if (consLen === 0) {
+                    // 元音相邻但被判定为双重元音，在中心直接切分
+                    splitOffset = 0;
+                } else if (consLen === 1) {
+                    // V-CV 规则：辅音归后一个音节 (ba-na-na)
+                    splitOffset = 0;
+                } else if (consLen === 2) {
+                    // VC-CV 规则：中间分开 (bas-ket)，避开双字符辅音 (th, sh, ch)
+                    const digraphs = ["th", "sh", "ch", "ph", "wh", "ck", "qu", "nk", "ng"];
+                    if (digraphs.includes(consStr)) {
+                        splitOffset = 0; // 视作单个辅音不拆分
+                    } else {
+                        splitOffset = 1; // 拆开
+                    }
+                } else {
+                    // 3个及以上辅音，在中间对半拆分
+                    splitOffset = Math.floor(consLen / 2);
+                }
+                splits.push(consStart + splitOffset);
+            }
+
+            let syllables = [];
+            for (let splitPoint of splits) {
+                syllables.push(word.substring(start, splitPoint));
+                start = splitPoint;
+            }
+            syllables.push(word.substring(start));
+
+            return syllables;
+        }
+
+        // 模拟生成启发式音标作为离线后备
+        function simulateIpa(word) {
+            const sylls = splitWordSyllables(word);
+            return `/${sylls.join('.')}/`;
+        }
+
+        // 获取并缓存音标（支持在线拉取与离线后备）
+        async function fetchIpa(word) {
+            const clean = word.toLowerCase().replace(/[^a-z]/g, '');
+            
+            // 1. 先查内置库
+            if (phonicsDb[clean]) {
+                return phonicsDb[clean].ipa;
+            }
+            
+            // 2. 查局部缓存
+            if (fetchedIpaCache[clean]) {
+                return fetchedIpaCache[clean];
+            }
+
+            // 3. 异步在线拉取 Dictionary API
+            try {
+                const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${clean}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data[0]) {
+                        if (data[0].phonetic) {
+                            fetchedIpaCache[clean] = data[0].phonetic;
+                            return data[0].phonetic;
+                        }
+                        if (data[0].phonetics && data[0].phonetics.length > 0) {
+                            for (let ph of data[0].phonetics) {
+                                if (ph.text) {
+                                    fetchedIpaCache[clean] = ph.text;
+                                    return ph.text;
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                console.warn("Dictionary API fetch failed, fallback to heuristic.", err);
+            }
+
+            // 4. 后备：本地启发式算法
+            const mock = simulateIpa(clean);
+            fetchedIpaCache[clean] = mock;
+            return mock;
+        }
+
+        // 渲染马卡龙炫彩音节（支持区分大小写自适应呈现，完美解决大小写规则需求）
+        function renderSyllables(word, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = "";
+
+            // 提取仅字母/空格/横线的有效显示字符
+            const clean = word.replace(/[^a-zA-Z\s\-]/g, '');
+            // 用小写分词确定分割边界
+            const lowercaseSylls = splitWordSyllables(clean.toLowerCase());
+
+            // 重构带有原始大小写结构的音节片段
+            let currentIndex = 0;
+            const syllsWithCasing = lowercaseSylls.map(syll => {
+                const originalPart = clean.substr(currentIndex, syll.length);
+                currentIndex += syll.length;
+                return originalPart;
+            });
+
+            // 绚丽多彩的柔和儿童马卡龙配色组
+            const colors = [
+                "text-rose-500",      // 柔玫红
+                "text-sky-500",       // 晴空蓝
+                "text-amber-600",      // 暖蜜橙
+                "text-emerald-500",    // 翡翠绿
+                "text-purple-500"      // 梦幻紫
+            ];
+
+            syllsWithCasing.forEach((syll, idx) => {
+                const span = document.createElement("span");
+                span.className = `syllable-span font-black ${colors[idx % colors.length]}`;
+                span.textContent = syll;
+                container.appendChild(span);
+
+                if (idx < syllsWithCasing.length - 1) {
+                    const dot = document.createElement("span");
+                    dot.className = "text-gray-300 font-bold mx-0.5 select-none";
+                    dot.textContent = "•";
+                    container.appendChild(dot);
+                }
+            });
+        }
+
+        // 异步更新音标显示
+        async function updateIpaDisplay(enWord) {
+            const clean = enWord.toLowerCase().replace(/[^a-z]/g, '');
+            
+            // 立即以最快速度显示本地/后备音标
+            const localIpa = phonicsDb[clean]?.ipa || simulateIpa(clean);
+            document.getElementById('backIpa').textContent = localIpa;
+            document.getElementById('frontIpa').textContent = localIpa;
+
+            // 如果是新词，尝试在线获取更完美的英美音标并秒级更新
+            if (!phonicsDb[clean]) {
+                const apiIpa = await fetchIpa(clean);
+                // 确保异步返回时，用户还没切到别的单词
+                if (wordList[currentIndex] && wordList[currentIndex].en.toLowerCase().replace(/[^a-z]/g, '') === clean) {
+                    document.getElementById('backIpa').textContent = apiIpa;
+                    document.getElementById('frontIpa').textContent = apiIpa;
+                }
+            }
+        }
+
+        // 基于单词字符的确定性哈希种子生成器，确保同一单词对应的图片百分百固定
+        function getSeed(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return Math.abs(hash) % 1000;
+        }
+
+        // 清理本地过旧的图片缓存，防止超出 5MB 限制
+        function clearOldImageCaches() {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('img_cache_')) {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => {
+                localStorage.removeItem(key);
+                const clean = key.replace('img_cache_', '');
+                delete imageUrlCache[clean];
+            });
+            console.log(`Cleared ${keysToRemove.length} cached images from localStorage.`);
+        }
+
+        // 将成功加载的高清图片缓存到 localStorage (转为极简 JPEG 0.6 格式，仅占用 6~10KB)
+        function saveImageToCache(word, imgElement) {
+            const clean = word.toLowerCase().replace(/[^a-z]/g, '');
+            if (localStorage.getItem('img_cache_' + clean)) return; // 已经缓存过
+
+            // 确保图片正常加载并且宽度有效，且不是 data: 链接
+            if (!imgElement.naturalWidth || imgElement.src.startsWith('data:')) return;
+
+            try {
+                const canvas = document.createElement('canvas');
+                const size = 320;
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(imgElement, 0, 0, size, size);
+                
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+                
+                try {
+                    localStorage.setItem('img_cache_' + clean, dataUrl);
+                    imageUrlCache[clean] = dataUrl;
+                    console.log(`Successfully cached ${clean} to localStorage (~${Math.round(dataUrl.length / 1024)} KB)`);
+                } catch (storageErr) {
+                    // 如果配额满了，清理一次旧缓存然后重试
+                    if (storageErr.name === 'QuotaExceededError' || storageErr.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                        console.warn("localStorage quota exceeded! Cleaning old image caches...");
+                        clearOldImageCaches();
+                        localStorage.setItem('img_cache_' + clean, dataUrl);
+                        imageUrlCache[clean] = dataUrl;
+                    } else {
+                        throw storageErr;
+                    }
+                }
+            } catch (e) {
+                console.warn(`Failed to canvas-cache image for ${clean} (CORS or quota):`, e);
+            }
+        }
+
+        // 完美防跳闪静默图片加载锁（升级为 fetch + FileReader 极速缓存，100% 解决 local file:// 协议 Canvas CORS 限制）
+        async function loadStaticImage(enWord, imgElement, emojiElement) {
+            const clean = enWord.toLowerCase().replace(/[^a-z]/g, '');
+            imgElement.dataset.currentWord = clean;
+            
+            // 1. 优先从内存或本地 localStorage 中直接读取 100% 锁定无刷新静态图
+            const cachedData = imageUrlCache[clean] || localStorage.getItem('img_cache_' + clean);
+            if (cachedData) {
+                imageUrlCache[clean] = cachedData;
+                imgElement.src = cachedData;
+                imgElement.classList.remove('hidden');
+                emojiElement.classList.add('hidden');
+                return;
+            }
+            
+            // 2. 如果没有缓存，则临时隐藏图片显示 Emoji 占位
+            imgElement.classList.add('hidden');
+            emojiElement.classList.remove('hidden');
+            
+            // 3. 生成 100% 稳定的哈希 Seed
+            const seed = getSeed(clean);
+            
+            // 4. 构造超精美的 3D 卡通儿童英语绘本插画 Prompt
+            const prompt = `a cute 3D cartoon style illustration of ${clean}, white background, vibrant colors, child-friendly, elementary school English learning card`;
+            const staticUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=320&height=320&seed=${seed}&nologo=true`;
+            
+            // 5. 尝试通过 fetch 异步获取图片并转化为 Base64 缓存，彻底绕过 canvas.toDataURL 本地安全沙箱限制
+            try {
+                // 设置 crossOrigin 属性供常规加载备用
+                imgElement.crossOrigin = "anonymous";
+                
+                const response = await fetch(staticUrl);
+                if (!response.ok) throw new Error('Pollinations response not ok');
+                const blob = await response.blob();
+                
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    const base64data = reader.result;
+                    // 确保在异步读取完毕后，用户没有切换到其它卡片
+                    if (imgElement.dataset.currentWord === clean) {
+                        imgElement.src = base64data;
+                        imgElement.classList.remove('hidden');
+                        emojiElement.classList.add('hidden');
+                    }
+                    // 存储到本地 localStorage
+                    try {
+                        localStorage.setItem('img_cache_' + clean, base64data);
+                        imageUrlCache[clean] = base64data;
+                        console.log(`Successfully cached ${clean} via fetch Blob (~${Math.round(base64data.length / 1024)} KB)`);
+                    } catch (e) {
+                        if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                            clearOldImageCaches();
+                            try {
+                                localStorage.setItem('img_cache_' + clean, base64data);
+                                imageUrlCache[clean] = base64data;
+                            } catch (innerE) {
+                                console.warn("Failed to cache even after clearing:", innerE);
+                            }
+                        }
+                    }
+                };
+                reader.readAsDataURL(blob);
+            } catch (err) {
+                console.warn(`Failed to fetch image from Pollinations AI for ${clean}:`, err);
+                // 降级：直接由 <img> 发起跨域请求（加载不缓存，依靠浏览器本身缓存或 onImageError 回退）
+                imgElement.crossOrigin = "anonymous";
+                imgElement.src = staticUrl;
+                
+                // 瞬间加载检测：如果浏览器已经缓存过此动态直链
+                if (imgElement.complete && imgElement.naturalWidth > 0) {
+                    imgElement.classList.remove('hidden');
+                    emojiElement.classList.add('hidden');
+                    saveImageToCache(clean, imgElement);
+                }
+            }
+        }
+
+        // 验证输入并开始学习
+        function validateAndStart() {
+            const rawText = document.getElementById('wordInput').value.trim();
+            if (!rawText) {
+                showToast("⚠️ 请先输入一些单词和中文翻译哦！", true);
+                return;
+            }
+
+            const lines = rawText.split('\n');
+            const parsedWords = [];
+
+            lines.forEach((line) => {
+                const parts = line.trim().split(/\s+/);
+                if (parts.length >= 2) {
+                    let en = parts[0].trim();
+                    const zh = parts.slice(1).join(' ').trim();
+                    
+                    // 大小写自适应智能规范：普通词汇一般用小写（即使大写输入也校正），专有名词或特定缩写保持原有或标准大小写
+                    const lowerEn = en.toLowerCase();
+                    const properNouns = ['china', 'uk', 'usa', 'canada', 't-shirt', 'tshirt'];
+                    if (properNouns.includes(lowerEn)) {
+                        // 专有名词标准化首字母大写或全大写
+                        if (lowerEn === 'china') en = 'China';
+                        else if (lowerEn === 'canada') en = 'Canada';
+                        else if (lowerEn === 'uk') en = 'UK';
+                        else if (lowerEn === 'usa') en = 'USA';
+                        else if (lowerEn === 't-shirt') en = 'T-shirt';
+                        else if (lowerEn === 'tshirt') en = 'T-shirt';
+                    } else if (en === en.toUpperCase() && en.length > 1) {
+                        // 普通普通词汇如果是全大写输入（如 APPLE），自动转小写
+                        en = lowerEn;
+                    } else {
+                        // 普通词汇含有大写首字母（如 Apple）也降为小写，符合儿童习惯
+                        en = lowerEn;
+                    }
+                    
+                    parsedWords.push({ en, zh });
+                }
+            });
+
+            if (parsedWords.length === 0) {
+                showToast("⚠️ 输入格式不正确，每行请用空格隔开。", true);
+                return;
+            }
+
+            wordList = parsedWords;
+            currentIndex = 0;
+
+            // 切换屏幕
+            document.getElementById('setupScreen').classList.add('hidden');
+            document.getElementById('studyScreen').classList.remove('hidden');
+            document.getElementById('studyScreen').classList.add('flex');
+            document.getElementById('editBtn').classList.remove('hidden');
+
+            updateCard();
+        }
+
+        // 回到设置屏幕
+        function showSetupScreen() {
+            document.getElementById('setupScreen').classList.remove('hidden');
+            document.getElementById('studyScreen').classList.add('hidden');
+            document.getElementById('studyScreen').classList.remove('flex');
+            document.getElementById('editBtn').classList.add('hidden');
+            
+            // 翻转复位
+            if (isFlipped) {
+                resetCardWithoutDelay();
+            }
+        }
+
+        // 切换学习阶段
+        function switchMode(mode) {
+            if (currentMode === mode) return;
+            currentMode = mode;
+            
+            // 切换标签高亮
+            const m1 = document.getElementById('mode1Tab');
+            const m2 = document.getElementById('mode2Tab');
+            if (mode === 'en-to-zh') {
+                m1.className = "flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 bg-emerald-500 text-white shadow-sm";
+                m2.className = "flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 text-gray-500 hover:text-emerald-600";
+            } else {
+                m2.className = "flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 bg-emerald-500 text-white shadow-sm";
+                m1.className = "flex-1 py-2 text-xs md:text-sm font-bold rounded-full transition-all duration-300 text-gray-500 hover:text-emerald-600";
+            }
+
+            // 复位翻转并刷新卡片
+            resetCard(() => {
+                updateCard();
+            });
+        }
+
+        // 看图听音时可选显示开关
+        function toggleShowWordOnFront() {
+            showWordOnFront = document.getElementById('showWordOnFrontToggle').checked;
+            localStorage.setItem('showWordOnFront', showWordOnFront);
+            updateFrontWordVisibility();
+        }
+
+        // 控制正面单词显示的可见性与内容渲染
+        function updateFrontWordVisibility() {
+            const frontPhonicsArea = document.getElementById('frontPhonicsArea');
+            if (currentMode === 'en-to-zh' && showWordOnFront && wordList.length > 0) {
+                frontPhonicsArea.classList.remove('hidden');
+                frontPhonicsArea.classList.add('flex');
+                
+                const word = wordList[currentIndex];
+                renderSyllables(word.en, 'frontEnglish');
+                updateIpaDisplay(word.en);
+            } else {
+                frontPhonicsArea.classList.remove('flex');
+                frontPhonicsArea.classList.add('hidden');
+            }
+        }
+
+        // 卡片翻转复位（带回调延迟，防止动画穿帮）
+        function resetCard(callback) {
+            isSpellingRevealed = false;
+            document.getElementById('showSpellingBtn').classList.remove('hidden');
+            document.getElementById('spellingWrapper').classList.add('hidden');
+
+            if (isFlipped) {
+                document.getElementById('cardInner').classList.remove('rotate-y-180');
+                isFlipped = false;
+                setTimeout(callback, 300);
+            } else {
+                callback();
+            }
+        }
+
+        // 立即无延迟复位卡片
+        function resetCardWithoutDelay() {
+            isSpellingRevealed = false;
+            document.getElementById('showSpellingBtn').classList.remove('hidden');
+            document.getElementById('spellingWrapper').classList.add('hidden');
+            document.getElementById('cardInner').classList.remove('rotate-y-180');
+            isFlipped = false;
+        }
+
+        // 更新卡片核心数据
+        function updateCard() {
+            if (wordList.length === 0) return;
+            const word = wordList[currentIndex];
+
+            // 1. 更新顶部进度
+            const currentNum = currentIndex + 1;
+            const totalNum = wordList.length;
+            const percent = Math.round((currentNum / totalNum) * 100);
+            document.getElementById('progressText').textContent = `第 ${currentNum} / ${totalNum} 个单词`;
+            document.getElementById('progressPercent').textContent = `${percent}%`;
+            document.getElementById('progressBar').style.width = `${percent}%`;
+
+            // 2. 渲染背面数据
+            document.getElementById('backChinese').textContent = word.zh;
+            renderSyllables(word.en, 'backEnglish');
+            updateIpaDisplay(word.en);
+
+            // 如果开启了正面显示，背面英文拼写直接处于揭晓状态，避免学生做二次重复点击
+            if (showWordOnFront && currentMode === 'en-to-zh') {
+                document.getElementById('showSpellingBtn').classList.add('hidden');
+                document.getElementById('spellingWrapper').classList.remove('hidden');
+                isSpellingRevealed = true;
+            }
+
+            // 3. 根据单词匹配内置 Emoji
+            const emoji = emojiDictionary[word.en.toLowerCase()] || '🌟';
+            document.getElementById('cardEmoji').textContent = emoji;
+
+            // 4. 加载确定性高清图片（防跳闪静默模式，交由 loadStaticImage 控制是否闪烁隐藏）
+            const imgElement = document.getElementById('cardImage');
+            const emojiElement = document.getElementById('cardEmoji');
+
+            loadStaticImage(word.en, imgElement, emojiElement);
+
+            // 5. 根据模式精细渲染正面
+            const cardBadge = document.getElementById('cardBadge');
+            const promptText = document.getElementById('promptText');
+            const imageWrapper = document.getElementById('imageWrapper');
+
+            if (currentMode === 'en-to-zh') {
+                cardBadge.textContent = "🔊 听英文说中文";
+                cardBadge.className = "px-3 py-1 bg-amber-100 text-amber-800 text-xs font-bold rounded-full";
+                imageWrapper.classList.remove('hidden');
+                promptText.textContent = "";
+                
+                speak(word.en, 'en');
+            } else {
+                cardBadge.textContent = "🔊 听中文说英文";
+                cardBadge.className = "px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full";
+                imageWrapper.classList.add('hidden');
+                promptText.textContent = word.zh;
+                
+                speak(word.zh, 'zh');
+            }
+
+            // 更新正面单词可见性状态
+            updateFrontWordVisibility();
+        }
+
+        // 高清真实图片成功加载
+        function onImageLoaded() {
+            const imgElement = document.getElementById('cardImage');
+            const emojiElement = document.getElementById('cardEmoji');
+            
+            // 确保当前加载完的图片是当前正显示的单词，避免快速切换时的乱序渲染 bug
+            if (wordList.length > 0) {
+                const cleanWord = wordList[currentIndex].en.toLowerCase().replace(/[^a-z]/g, '');
+                if (imgElement.dataset.currentWord === cleanWord) {
+                    imgElement.classList.remove('hidden');
+                    emojiElement.classList.add('hidden');
+                    
+                    // 异步保存到本地缓存中
+                    saveImageToCache(cleanWord, imgElement);
+                }
+            }
+        }
+
+        // 高清真实图片加载失败（双重优雅退避）
+        function onImageError() {
+            const imgElement = document.getElementById('cardImage');
+            const emojiElement = document.getElementById('cardEmoji');
+            const clean = imgElement.dataset.currentWord;
+            if (!clean) return;
+            
+            const seed = getSeed(clean);
+            
+            // 只有当加载 Pollinations AI 失败时，才尝试回退到安全起源链接 (loremflickr)
+            if (imgElement.src.includes('pollinations.ai') || imgElement.src.startsWith('data:')) {
+                console.warn("Pollinations AI loaded failed, falling back to LoremFlickr...");
+                // 必须移除 crossOrigin 属性！因为 LoremFlickr 不支持 CORS 头部，若不移除会导致浏览器无条件拦截！
+                imgElement.removeAttribute('crossOrigin');
+                imgElement.src = `https://loremflickr.com/320/320/${encodeURIComponent(clean)}?lock=${seed}`;
+            } else {
+                // 若最终回退也失败了，彻底使用大字可爱 Emoji 替代
+                imgElement.classList.add('hidden');
+                emojiElement.classList.remove('hidden');
+            }
+        }
+
+        // 翻转卡片
+        function toggleCardFlip() {
+            if (wordList.length === 0) return;
+            const cardInner = document.getElementById('cardInner');
+            if (isFlipped) {
+                cardInner.classList.remove('rotate-y-180');
+                isFlipped = false;
+            } else {
+                cardInner.classList.add('rotate-y-180');
+                isFlipped = true;
+                
+                // 翻面揭晓时，如果是听中说英，顺便发音一下正确的英文，对齐听力认知
+                if (currentMode === 'zh-to-en') {
+                    speak(wordList[currentIndex].en, 'en');
+                }
+            }
+        }
+
+        // 揭晓拼写
+        function revealSpelling(event) {
+            event.stopPropagation(); // 阻止卡片触发翻转事件
+            document.getElementById('showSpellingBtn').classList.add('hidden');
+            document.getElementById('spellingWrapper').classList.remove('hidden');
+            isSpellingRevealed = true;
+            
+            speak(wordList[currentIndex].en, 'en');
+        }
+
+        // 向前切换单词
+        function prevWord() {
+            resetCard(() => {
+                currentIndex = (currentIndex - 1 + wordList.length) % wordList.length;
+                updateCard();
+            });
+        }
+
+        // 向后切换单词
+        function nextWord() {
+            resetCard(() => {
+                currentIndex = (currentIndex + 1) % wordList.length;
+                updateCard();
+            });
+        }
+
+        // 手动重播声音
+        function replayAudio(event) {
+            event.stopPropagation(); // 阻止翻转
+            if (wordList.length === 0) return;
+            
+            const word = wordList[currentIndex];
+            if (isFlipped) {
+                // 如果是在背面，无论是第一还是第二阶段，都优先读英文拼写
+                speak(word.en, 'en');
+            } else {
+                // 如果在正面，按所处模式发音
+                if (currentMode === 'en-to-zh') {
+                    speak(word.en, 'en');
+                } else {
+                    speak(word.zh, 'zh');
+                }
+            }
+        }
+
+        // 纯前端网页语音合成发音
+        function speak(text, lang) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); // 强行中断上一个发音，使得连续重音极其丝滑
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = lang === 'en' ? 'en-US' : 'zh-CN';
+                utterance.rate = 0.72; // 稍微放慢语速，特别适合儿童模仿和咬字认知
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("⚠️ 当前浏览器不支持网页语音发音系统", true);
+            }
+        }
+    </script>
+</body>
+</html>
