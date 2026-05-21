@@ -139,6 +139,14 @@
             </div>
         </div>
 
+        <!-- 手机静音提示小贴士 -->
+        <div class="w-full bg-amber-50 border border-amber-200/60 p-2.5 rounded-2xl flex items-start gap-2 mb-3 text-amber-800 text-xs shadow-inner">
+            <span class="text-base leading-none">💡</span>
+            <div class="leading-relaxed">
+                <strong>手机端听不到声音？</strong>请检查是否开启了手机侧边的<span class="font-bold underline text-amber-900 cursor-help">物理静音开关</span>，并调大媒体音量哦！
+            </div>
+        </div>
+
         <!-- 学习可选配置面板 (显示英文单词开关) -->
         <div class="w-full glass-panel px-4 py-2.5 rounded-2xl flex justify-between items-center mb-4 shadow-sm">
             <label class="flex items-center space-x-2.5 cursor-pointer select-none text-emerald-800 font-bold text-xs md:text-sm">
@@ -571,18 +579,42 @@
         let isFlipped = false;
         let isSpellingRevealed = false;
         let showWordOnFront = false; // 是否在正面显示英文
+        let activeUtterance = null; // 保持全局引用防止垃圾回收导致的静音
 
         // 初始化
         window.onload = function() {
             loadTemplate('colors'); // 默认改为载入最精美的颜色模板
+            initMobileAudioUnlock(); // 注册首手势激活解锁
 
             // 读取看图显示单词的偏好
             showWordOnFront = localStorage.getItem('showWordOnFront') === 'true';
             document.getElementById('showWordOnFrontToggle').checked = showWordOnFront;
         };
 
+        // 手机端手势唤醒语音引擎（点击或触摸页面任意位置，仅解锁一次）
+        function initMobileAudioUnlock() {
+            const unlock = () => {
+                unlockMobileAudio();
+                document.removeEventListener('click', unlock);
+                document.removeEventListener('touchstart', unlock);
+            };
+            document.addEventListener('click', unlock, { passive: true });
+            document.addEventListener('touchstart', unlock, { passive: true });
+        }
+
+        // 静音发音唤醒函数 (Unlock Speech Engine)
+        function unlockMobileAudio() {
+            if ('speechSynthesis' in window) {
+                const u = new SpeechSynthesisUtterance(" ");
+                u.volume = 0;
+                u.rate = 1.0;
+                window.speechSynthesis.speak(u);
+            }
+        }
+
         // 加载快捷模板
         function loadTemplate(key) {
+            unlockMobileAudio();
             document.getElementById('wordInput').value = templates[key];
         }
 
@@ -999,6 +1031,7 @@
 
         // 验证输入并开始学习
         function validateAndStart() {
+            unlockMobileAudio();
             const rawText = document.getElementById('wordInput').value.trim();
             if (!rawText) {
                 showToast("⚠️ 请先输入一些单词和中文翻译哦！", true);
@@ -1069,6 +1102,7 @@
 
         // 切换学习阶段
         function switchMode(mode) {
+            unlockMobileAudio();
             if (currentMode === mode) return;
             currentMode = mode;
             
@@ -1238,6 +1272,7 @@
 
         // 翻转卡片
         function toggleCardFlip() {
+            unlockMobileAudio();
             if (wordList.length === 0) return;
             const cardInner = document.getElementById('cardInner');
             if (isFlipped) {
@@ -1256,6 +1291,7 @@
 
         // 揭晓拼写
         function revealSpelling(event) {
+            unlockMobileAudio();
             event.stopPropagation(); // 阻止卡片触发翻转事件
             document.getElementById('showSpellingBtn').classList.add('hidden');
             document.getElementById('spellingWrapper').classList.remove('hidden');
@@ -1266,6 +1302,7 @@
 
         // 向前切换单词
         function prevWord() {
+            unlockMobileAudio();
             resetCard(() => {
                 currentIndex = (currentIndex - 1 + wordList.length) % wordList.length;
                 updateCard();
@@ -1274,6 +1311,7 @@
 
         // 向后切换单词
         function nextWord() {
+            unlockMobileAudio();
             resetCard(() => {
                 currentIndex = (currentIndex + 1) % wordList.length;
                 updateCard();
@@ -1282,6 +1320,7 @@
 
         // 手动重播声音
         function replayAudio(event) {
+            unlockMobileAudio();
             event.stopPropagation(); // 阻止翻转
             if (wordList.length === 0) return;
             
@@ -1302,10 +1341,28 @@
         // 纯前端网页语音合成发音
         function speak(text, lang) {
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel(); // 强行中断上一个发音，使得连续重音极其丝滑
+                try {
+                    window.speechSynthesis.cancel(); // 强行中断上一个发音，使得连续重音极其丝滑
+                } catch (e) {
+                    console.warn("SpeechSynthesis cancel error:", e);
+                }
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = lang === 'en' ? 'en-US' : 'zh-CN';
                 utterance.rate = 0.72; // 稍微放慢语速，特别适合儿童模仿和咬字认知
+                
+                // 保持全局引用，规避 iOS GC 引起的静音或中断
+                activeUtterance = utterance;
+                utterance.onend = function() {
+                    if (activeUtterance === utterance) {
+                        activeUtterance = null;
+                    }
+                };
+                utterance.onerror = function() {
+                    if (activeUtterance === utterance) {
+                        activeUtterance = null;
+                    }
+                };
+                
                 window.speechSynthesis.speak(utterance);
             } else {
                 showToast("⚠️ 当前浏览器不支持网页语音发音系统", true);
